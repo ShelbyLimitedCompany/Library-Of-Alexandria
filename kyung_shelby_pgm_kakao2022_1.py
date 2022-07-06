@@ -1,6 +1,7 @@
 """
 https://school.programmers.co.kr/learn/courses/30/lessons/92334
 
+
 문제 설명
 신입사원 무지는 게시판 불량 이용자를 신고하고 처리 결과를 메일로 발송하는 시스템을 개발하려 합니다. 무지가 개발하려는 시스템은 다음과 같습니다.
 
@@ -153,11 +154,11 @@ class User:
         self.name = name
         self.in_user = []
         self.out_user = []
+
         self.notified_count = 0
 
     def __repr__(self):
         return f"username: {self.name}, in: {self.in_user}, out: {self.out_user}, notified_count: {self.notified_count}\n"
-
 
 def solution_try_2(id_list: List, report: List[str], k: int):
     answer = []
@@ -167,10 +168,12 @@ def solution_try_2(id_list: List, report: List[str], k: int):
 
     report = set(report)
 
+
     for r in report:
         src, trg = r.split()
 
         # 1000
+
         for u in users:
             notified_count_dict[u.name] = 0
 
@@ -189,7 +192,6 @@ def solution_try_2(id_list: List, report: List[str], k: int):
         answer.append(v)
 
     return answer
-
 
 def solution(id_list: List, report: List[str], k: int):
     length = len(id_list)
@@ -232,3 +234,4 @@ if __name__ == '__main__':
     k = 3
 
     assert [0, 0] == solution(id_list, report, k)
+
