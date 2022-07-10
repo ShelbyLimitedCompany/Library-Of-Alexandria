@@ -1,5 +1,7 @@
 """
-문제 설명
+https://school.programmers.co.kr/learn/courses/30/lessons/92334
+
+
 문제 설명
 신입사원 무지는 게시판 불량 이용자를 신고하고 처리 결과를 메일로 발송하는 시스템을 개발하려 합니다. 무지가 개발하려는 시스템은 다음과 같습니다.
 
@@ -65,28 +67,66 @@ id_list	report	k	result
 "ryan"이 "con"을 4번 신고했으나, 주어진 조건에 따라 한 유저가 같은 유저를 여러 번 신고한 경우는 신고 횟수 1회로 처리합니다.
 따라서 "con"은 1회 신고당했습니다.
 3번 이상 신고당한 이용자는 없으며, "con"과 "ryan"은 결과 메일을 받지 않습니다. 따라서 [0, 0]을 return 합니다.
+
+
+============SOLUTION============
+1차 시도
+- 그래프 자료구조에서 node 를 흉내낸 객체를 만들어서 풀이하려고 했다.
+- 접근 자체는 정답과 크게 벗어나지 않았으나, 특정 user 를 조회하는데 배열의 모든 우너소를 순회하는 등 비효율이 많았다.
+- 또한, report 의 중복 제거를 고려하지 않았다.
+- 시간 초과가 났다.
+
+2차 시도
+- set 을 이용해 report 의 중복을 제거했다.
+- 불필요하게 list 로 바꾸는 부분들(예를 들면 list(dictionary.keys()) 같은 부분들을 제거했다.
+- 3개의 케이스에서 시간 초과가 났다.
+
+3차 시도
+- report 를 순회하면서, user 를 순회한다는 점이 시간 초과가 날 것 같았다. (200000 * 1000 * {k 회 이상 신고당한 user 를 신고한 user 수})
+- 2중 for 문을 아예 없애고, 가능한 한 모든 것을 dictionary 로 조회하면 2중 for 문을 돌릴 이유가 없을 것 같았다.
+- 각 사용자의 이름을 key 로 갖고, value 로는 해당 사용자를 신고한 사용자 배열, 해당 사용자가 신고한 사용자 배열, 알림 받은 수 를 각각 key-value
+    를 형태로 저장하는 딕셔너리를 갖게 했다.
+
+    "kks": {
+        "in": [],
+        "out": [],
+        "count": 0
+    }
+
+- 그러자 report 를 순회하는 것 만으로 정답을 구할 수 있는 데이터가 완성되었다.
+- 이 report 에서, 사용자 id 를 통해 "in" 에 접근하여, count 가 k 이상인 user 를 신고한 사용자에의 count 를 증가시켰다.
+- 정답이었다.
+
 """
+from collections import defaultdict
 from typing import List
 
 
-class User:
-    def __init__(self, name):
-        self.name = name
-        self.in_user = {}
-        self.out_user = {}
-        self.notified_count = 0
+# class User:
+#     def __init__(self, name):
+#         self.name = name
+#         self.in_user = defaultdict()
+#         self.out_user = defaultdict()
+#         self.notified_count = 0
+#
+#     def __repr__(self):
+#         return f"username: {self.name}, in: {self.in_user}, out: {self.out_user}, notified_count: {self.notified_count}\n"
 
-    def __repr__(self):
-        return f"username: {self.name}, in: {self.in_user}, out: {self.out_user}, notified_count: {self.notified_count}\n"
 
-def solution(id_list: List, report: List[str], k: int):
+def solution_try_1(id_list: List, report: List[str], k: int):
     answer = []
-    users = [User(user_id) for user_id in id_list]
-    notified_count_dict = {}
 
+    # 1000
+    users = [User(user_id) for user_id in id_list]
+    notified_count_dict = defaultdict()
+
+    report = set(report)
+
+    # 200000
     for r in report:
         src, trg = r.split()
 
+        # 1000
         for u in users:
             notified_count_dict[u.name] = 0
 
@@ -96,10 +136,11 @@ def solution(id_list: List, report: List[str], k: int):
             if u.name == trg:
                 u.in_user[src] = 1
 
+    # 1000
     for u in users:
         if len(u.in_user.keys()) >= k:
 
-            for in_user_name in list(u.in_user.keys()):
+            for in_user_name in u.in_user.keys():
                 notified_count_dict[in_user_name] += 1
 
     for _, v in notified_count_dict.items():
@@ -108,16 +149,89 @@ def solution(id_list: List, report: List[str], k: int):
     return answer
 
 
+class User:
+    def __init__(self, name):
+        self.name = name
+        self.in_user = []
+        self.out_user = []
+
+        self.notified_count = 0
+
+    def __repr__(self):
+        return f"username: {self.name}, in: {self.in_user}, out: {self.out_user}, notified_count: {self.notified_count}\n"
+
+def solution_try_2(id_list: List, report: List[str], k: int):
+    answer = []
+
+    users = [User(user_id) for user_id in id_list]
+    notified_count_dict = defaultdict()
+
+    report = set(report)
+
+
+    for r in report:
+        src, trg = r.split()
+
+        # 1000
+
+        for u in users:
+            notified_count_dict[u.name] = 0
+
+            if u.name == src:
+                u.out_user.append(trg)
+
+            if u.name == trg:
+                u.in_user.append(src)
+
+    for u in users:
+        if len(u.in_user) >= k:
+            for in_user_name in u.in_user:
+                notified_count_dict[in_user_name] += 1
+
+    for _, v in notified_count_dict.items():
+        answer.append(v)
+
+    return answer
+
+def solution(id_list: List, report: List[str], k: int):
+    length = len(id_list)
+
+    table = {}
+    report = set(report)
+
+    for id_ in id_list:
+        table[id_] = {
+            "in": [],
+            "out": [],
+            "notified_count": 0
+        }
+
+    for r in report:
+        src, trg = r.split()
+
+        table[src]["out"].append(trg)
+        table[trg]["in"].append(src)
+
+    for key, value in table.items():
+        if len(table[key]["in"]) >= k:
+            for in_user in table[key]["in"]:
+                table[in_user]["notified_count"] += 1
+
+    answer = [value["notified_count"] for _, value in table.items()]
+    return answer
+
+
 if __name__ == '__main__':
     id_list = ["muzi", "frodo", "apeach", "neo"]
-    report = ["muzi frodo", "apeach frodo", "frodo neo", "muzi neo", "apeach muzi"]
+    report = ["muzi frodo", "apeach frodo", "frodo neo", "muzi neo", "apeach muzi", "apeach muzi"]
     k = 2
-    answer: [2,1,1,0]
-    assert [2,1,1,0] == solution(id_list, report, k)
 
-    #
-    # id_list = ["con", "ryan"]
-    # report = ["ryan con", "ryan con", "ryan con", "ryan con"]
-    # k = 3
-    #
-    # assert [0, 0] == solution(id_list, report, k)
+    assert [2, 1, 1, 0] == solution(id_list, report, k)
+
+
+    id_list = ["con", "ryan"]
+    report = ["ryan con", "ryan con", "ryan con", "ryan con"]
+    k = 3
+
+    assert [0, 0] == solution(id_list, report, k)
+
