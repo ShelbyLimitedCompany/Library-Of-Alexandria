@@ -1,52 +1,41 @@
-# row_count, max_virus = map(int, input().split())
-# board = []
-# for _ in range(row_count):
-#     board.append(list((map(int, input().split()))))
-# seconds, target_x, target_y = map(int, input().split())
+from collections import deque
 
-row_count, max_virus = 3, 3
-board = [[1, 0, 2], [0, 0, 0], [2, 3, 2]]
-seconds, target_x, target_y = 2, 3, 2
 
+row_count, max_virus = map(int, input().split())
+board = []
+data = []
+
+for i in range(row_count):
+    board.append(list(map(int, input().split())))
+
+    for j in range(row_count):
+        if board[i][j] != 0:
+            data.append([board[i][j], 0, i, j])
+
+data.sort()
+queue = deque(data)
+
+seconds, target_x, target_y = map(int, input().split())
 
 d_row = [-1, 0, 1, 0]
 d_col = [0, 1, 0, -1]
 
 
-def dfs(x, y, virus_priority):
-    """
-    원소 값이 0 이상, x, y 값이 정상인 곳에 대해서, virus_priority 를 가지고 전염을 시키는 재귀함수
-    :param x:
-    :param y:
-    :param virus_priority:
-    :return:
-    """
-    print(f"dfs: row: {row}, col: {col}, board: {board[row][col]}")
-
-    if virus_priority == 0:
-        return
-
-    if virus_priority < board[x][y]:
-        board[x][y] = virus_priority
-
-    for i in range(4):
-        new_row = row + d_row[i]
-        new_col = col + d_col[i]
-
-        if 0 <= new_row < row_count and \
-                0 <= new_col < row_count and \
-                0 < board[new_row][new_col]:
-            dfs(new_row, new_col, board[row][col])
-
-    return
-
-
 if __name__ == '__main__':
-    # 10,000 * 200 * 200 * 4
-    for _ in range(seconds):
-        for row in range(row_count):
-            for col in range(row_count):
-                print("main")
-                dfs(row, col, board[row][col])
+    while queue:
+        virus_priority, time, x, y = queue.popleft()
 
-    print(board[target_x][target_y])
+        # 시간이 초과한 경우
+        if time == seconds:
+            break
+
+        for i in range(4):
+            new_x = x + d_row[i]
+            new_y = y + d_col[i]
+
+            if 0 <= new_x < row_count and 0 <= new_y < row_count:
+                if board[new_x][new_y] == 0:
+                    board[new_x][new_y] = virus_priority
+                    queue.append([virus_priority, time + 1, new_x, new_y])
+
+    print(board[target_x - 1][target_y - 1])
